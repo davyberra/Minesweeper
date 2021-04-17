@@ -31,33 +31,12 @@ red = arcade.color.RED
 green = arcade.color.GREEN
 blue = arcade.color.BLUE_YONDER
 
-# Load sounds
-s = "nice_job_sound"
-vox_list = []
-vox_vhigh = arcade.load_sound("resources/nice_job_sound_vhigh.ogg")
-vox_list.append(vox_vhigh)
-vox_high = arcade.load_sound("resources/nice_job_sound_high.ogg")
-vox_list.append(vox_high)
-vox_mhigh = arcade.load_sound(f"resources/{s}_mhigh.ogg")
-vox_list.append(vox_mhigh)
-vox_reg = arcade.load_sound(f"resources/{s}.ogg")
-vox_list.append(vox_reg)
-vox_mlow = arcade.load_sound(f"resources/{s}_mlow.ogg")
-vox_list.append(vox_mlow)
-vox_low = arcade.load_sound(f"resources/{s}_low.ogg")
-vox_list.append(vox_low)
-vox_vlow = arcade.load_sound(f"resources/{s}_vlow.ogg")
-vox_list.append(vox_vlow)
-
-game_over_sound = arcade.load_sound("resources/game_over_sound.ogg")
-
 color = white
 
 def get_random_row_and_column(column_count, row_count):
     row = random.randint(0, row_count - 1)
     column = random.randint(0, column_count - 1)
     return row, column
-
 
 
 class MyGame(arcade.View):
@@ -295,10 +274,7 @@ class MyGame(arcade.View):
                         self.mines[-1][0] = 1
                         self.get_prox_number(row, column)
                         self.first_click = False
-                    else:
-                        arcade.play_sound(game_over_sound)
-                elif self.grid[row][column] == 0:
-                    arcade.play_sound(vox_list[random.randint(0, len(vox_list) - 1)])
+
                 if self.grid[row][column] == 2:
                     pass
 
@@ -308,7 +284,7 @@ class MyGame(arcade.View):
                 elif self.grid[row][column] == 1 and self.prox_numbers[row][column] > 0:
                     self.get_adjacent_boxes(row, column)
 
-                # print("Click Coordinates: (" + str(x), str(y) + "). Grid Coordinates: (" + str(row), str(column) + ").")
+
 
         elif button == arcade.MOUSE_BUTTON_RIGHT:
             column = x // (WIDTH + MARGIN)
@@ -443,17 +419,10 @@ class GameMenu(arcade.View):
                                                     HARD_ROW_COUNT * HEIGHT + MARGIN * (HARD_ROW_COUNT + 1) + 50
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
-            
+
             game_view = MyGame(HARD_COLUMN_COUNT, HARD_ROW_COUNT, self.screen_width, self.screen_height)
             game_view.setup()
             self.window.show_view(game_view)
-
-    # def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
-    #     if button == arcade.MOUSE_BUTTON_LEFT:
-    #
-    #         game_view = MyGame()
-    #         game_view.setup()
-    #         self.window.show_view(game_view)
 
 
 def main():
