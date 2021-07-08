@@ -10,11 +10,6 @@ Check the README for directions on how to play.
 import arcade
 import random
 import time
-import os
-import sys
-
-# if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-#     os.chdir(sys._MEIPASS)
 
 # Set screen size based on game mode (easy, medium, or hard)
 WIDTH = 60
@@ -33,6 +28,7 @@ black = arcade.color.BLACK
 red = arcade.color.RED
 green = arcade.color.GREEN
 blue = arcade.color.BLUE_YONDER
+white_translucent = (255, 255, 255, 200)
 
 color = white
 
@@ -220,7 +216,7 @@ class MyGame(arcade.View):
                 self.screen_height / 2,
                 self.screen_width * 3 / 4,
                 self.screen_height * 3 / 4,
-                white
+                white_translucent
             )
             arcade.draw_text(
                 "YOU WIN!!!!",
@@ -248,7 +244,7 @@ class MyGame(arcade.View):
                 self.screen_height / 2,
                 self.screen_width * 3 / 4,
                 self.screen_height * 3 / 4,
-                white
+                white_translucent
             )
             arcade.draw_text(
                 "GAME OVER",
@@ -276,9 +272,11 @@ class MyGame(arcade.View):
         """
 
         if not self.game_over and not self.game_won:
-            self.elapsed_time = (time.time() - self.t_0) // 1
+            if self.elapsed_time < 999:
+                self.elapsed_time = (time.time() - self.t_0) // 1
 
-        #
+        # After a player reveals a cell that doesn't have any adjacent mines,
+        # finds all adjacent cells that also have zero mines in their proximity.
         self.get_zeroed_boxes()
 
         boxes_left = 0
@@ -450,26 +448,56 @@ class MyGame(arcade.View):
 
 
 class GameMenu(arcade.View):
+    """
+    Main Menu screen.
+    """
 
     def on_show(self):
         arcade.set_background_color(black)
 
     def on_draw(self):
         arcade.start_render()
-        arcade.draw_text("MINESWEEPER", MAIN_SCREEN_WIDTH / 2, MAIN_SCREEN_HEIGHT / 2 + 50, white, 70, anchor_x="center")
-        arcade.draw_text("Press 'a' for EASY\nPress 's' for MEDIUM\nPress 'd' for HARD",
-                         MAIN_SCREEN_WIDTH / 2, MAIN_SCREEN_HEIGHT/ 2 - 75, white, 40, anchor_x="center", anchor_y="top")
+        arcade.draw_text(
+            "MINESWEEPER",
+            MAIN_SCREEN_WIDTH / 2,
+            MAIN_SCREEN_HEIGHT / 2 + 50,
+            white,
+            70,
+            anchor_x="center"
+        )
+        arcade.draw_text(
+            "Press 'a' for EASY\nPress 's' for MEDIUM\nPress 'd' for HARD",
+            MAIN_SCREEN_WIDTH / 2,
+            MAIN_SCREEN_HEIGHT/ 2 - 75,
+            white,
+            40,
+            anchor_x="center",
+            anchor_y="top"
+        )
 
     def on_key_press(self, key, modifiers):
+        """
+        Called when a key is pressed.
+        Used to determine game modes from Main Menu screen.
+        """
+        # Easy Mode
+
         if key == arcade.key.A:
             self.screen_width, self.screen_height = EASY_COLUMN_COUNT * WIDTH + MARGIN * (EASY_COLUMN_COUNT + 1), \
                                                     EASY_ROW_COUNT * HEIGHT + MARGIN * (EASY_ROW_COUNT + 1) + 50
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(EASY_COLUMN_COUNT, EASY_ROW_COUNT, self.screen_width, self.screen_height)
+            game_view = MyGame(
+                EASY_COLUMN_COUNT,
+                EASY_ROW_COUNT,
+                self.screen_width,
+                self.screen_height
+            )
             game_view.setup()
             self.window.show_view(game_view)
+
+        # Medium Mode
 
         elif key == arcade.key.S:
             self.screen_width, self.screen_height = MEDIUM_COLUMN_COUNT * WIDTH + MARGIN * (MEDIUM_COLUMN_COUNT + 1), \
@@ -477,9 +505,16 @@ class GameMenu(arcade.View):
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(MEDIUM_COLUMN_COUNT, MEDIUM_ROW_COUNT, self.screen_width, self.screen_height)
+            game_view = MyGame(
+                MEDIUM_COLUMN_COUNT,
+                MEDIUM_ROW_COUNT,
+                self.screen_width,
+                self.screen_height
+            )
             game_view.setup()
             self.window.show_view(game_view)
+
+        # Hard Mode
 
         elif key == arcade.key.D:
             self.screen_width, self.screen_height = HARD_COLUMN_COUNT * WIDTH + MARGIN * (HARD_COLUMN_COUNT + 1), \
@@ -487,12 +522,20 @@ class GameMenu(arcade.View):
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(HARD_COLUMN_COUNT, HARD_ROW_COUNT, self.screen_width, self.screen_height)
+            game_view = MyGame(
+                HARD_COLUMN_COUNT,
+                HARD_ROW_COUNT,
+                self.screen_width,
+                self.screen_height
+            )
             game_view.setup()
             self.window.show_view(game_view)
 
 
 def main():
+    """
+    Main method. Calls the game menus.
+    """
     window = arcade.Window(MAIN_SCREEN_WIDTH, MAIN_SCREEN_HEIGHT, "Minesweeper")
     window.center_window()
     start_view = GameMenu()
