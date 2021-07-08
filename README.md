@@ -4,7 +4,7 @@ A clone of the popular Minesweeper game made with Python and the Arcade module.
 
 ## Gameplay Demo
 
-![Gameplay Demo](doc/minesweeper_demo.gif)
+![Gameplay Demo](doc/demo.gif)
 
 ## Features
 Allows for Easy, Medium, and Hard difficulty Boards
