@@ -13,8 +13,17 @@ Incorporates Flagging/Chording
 
 Keeps track of time elapsed, and saves your best time between games as your high score
 ## Installation Instructions
-Clone the repo into a local repository, or simply download the code.
-To play the game, simply run <code>main.py</code>.
+Requires: Python, Arcade
+
+Clone/Download the source code to your computer, then install Arcade with the following command:
+```bash
+pip install arcade
+```
+Run "main.py" to play the game.
+```bash
+python main.py
+```
+
 ## How To Play
 ### Objective
 The board is made up of a grid of cells, with mines scattered randomly throughout the board.
