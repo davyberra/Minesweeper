@@ -172,5 +172,3 @@ class GetZeroedBoxesTest(TestCase):
 
         self.assertEqual(0, uncleared_cells)
         self.assertEqual(0, wrongly_cleared_cells)
-
-
