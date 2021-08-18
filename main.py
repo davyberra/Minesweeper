@@ -23,14 +23,14 @@ MAIN_SCREEN_WIDTH = EASY_COLUMN_COUNT * WIDTH + MARGIN * (EASY_COLUMN_COUNT + 1)
 MAIN_SCREEN_HEIGHT = EASY_ROW_COUNT * HEIGHT + MARGIN * (EASY_ROW_COUNT + 1) + 50
 
 # Initialize color variables
-white = arcade.color.WHITE
-black = arcade.color.BLACK
-red = arcade.color.RED
-green = arcade.color.GREEN
-blue = arcade.color.BLUE_YONDER
-white_translucent = (255, 255, 255, 200)
+WHITE = arcade.color.WHITE
+BLACK = arcade.color.BLACK
+RED = arcade.color.RED
+GREEN = arcade.color.GREEN
+BLUE = arcade.color.BLUE_YONDER
+WHITE_TRANSLUCENT = (255, 255, 255, 200)
 
-color = white
+color = WHITE
 
 def get_random_row_and_column(column_count, row_count):
     """
@@ -42,7 +42,7 @@ def get_random_row_and_column(column_count, row_count):
     return row, column
 
 
-class MyGame(arcade.View):
+class Minesweeper(arcade.View):
     """
     Main application class.
     """
@@ -76,7 +76,7 @@ class MyGame(arcade.View):
         self.game_over = False
         self.game_won = False
 
-        arcade.set_background_color(black)
+        arcade.set_background_color(BLACK)
         self.grid = []
         self.mines = []
         self.mines_left = self.mine_count
@@ -129,11 +129,99 @@ class MyGame(arcade.View):
 
         for row in range(self.row_count):
             for column in range(self.column_count):
-                self.get_prox_number(row, column)
+                self.prox_numbers[row][column] = self.get_prox_number(row, column)
 
         self.elapsed_time = (time.time() - self.t_0) // 1
 
         self.first_click = True
+
+    def chord_cells(self, row, column):
+        """
+        Used when trying to chord.
+        Finds the flags bordering the clicked cell, and if the flag count
+        equals the number in the cell, clears the remaining cells bordering the clicked cell.
+        """
+
+        current_flags = self.get_surrounding_flags(column, row)
+
+        if current_flags == self.prox_numbers[row][column]:
+            for y in range(row - 1, row + 2):
+                if self.row_count > y >= 0:
+                    for x in range(column - 1, column + 2):
+                        if self.column_count > x >= 0:
+                            if self.flag_list[y][x] != 1:
+                                self.grid[y][x] = 1
+
+    def get_prox_number(self, row, column):
+        """
+        Finds the number of mines bordering every cell.
+        Used to determine the number displayed on each cell.
+        """
+        prox_number = 0
+
+        if row < self.row_count - 1:
+            if self.mines[row + 1][column] == 1:
+                prox_number += 1
+        if row < self.row_count - 1 and column < self.column_count - 1:
+            if self.mines[row + 1][column + 1] == 1:
+                prox_number += 1
+        if column < self.column_count - 1:
+            if self.mines[row][column + 1] == 1:
+                prox_number += 1
+        if column < self.column_count - 1 and row > 0:
+            if self.mines[row - 1][column + 1] == 1:
+                prox_number += 1
+        if row > 0:
+            if self.mines[row - 1][column] == 1:
+                prox_number += 1
+        if row > 0 and column > 0:
+            if self.mines[row - 1][column - 1] == 1:
+                prox_number += 1
+        if column > 0:
+            if self.mines[row][column - 1] == 1:
+                prox_number += 1
+        if column > 0 and row < self.row_count - 1:
+            if self.mines[row + 1][column - 1] == 1:
+                prox_number += 1
+        if self.mines[row][column] == 1:
+            prox_number = 10
+
+        return prox_number
+
+    def get_surrounding_flags(self, column, row):
+        current_flags = 0
+        for y in range(row - 1, row + 2):
+            if self.row_count > y >= 0:
+                for x in range(column - 1, column + 2):
+                    if self.column_count > x >= 0:
+                        if self.flag_list[y][x] == 1:
+                            current_flags += 1
+        return current_flags
+
+    def get_zeroed_boxes(self):
+        """
+        Reveals cells that have no mines bordering them when
+        the player reveals a cell next to them.
+        """
+        for row in range(self.row_count):
+            for column in range(self.column_count):
+                if self.prox_numbers[row][column] == 0 and self.grid[row][column] == 1:
+                    if row > 0:
+                        self.grid[row - 1][column] = 1
+                    if row > 0 and column > 0:
+                        self.grid[row - 1][column - 1] = 1
+                    if column > 0:
+                        self.grid[row][column - 1] = 1
+                    if row < self.row_count - 1 and column > 0:
+                        self.grid[row + 1][column - 1] = 1
+                    if row < self.row_count - 1:
+                        self.grid[row + 1][column] = 1
+                    if row < self.row_count - 1 and column < self.column_count - 1:
+                        self.grid[row + 1][column + 1] = 1
+                    if column < self.column_count - 1:
+                        self.grid[row][column + 1] = 1
+                    if row > 0 and column < self.column_count - 1:
+                        self.grid[row - 1][column + 1] = 1
 
     def on_draw(self):
 
@@ -151,21 +239,21 @@ class MyGame(arcade.View):
             f"Mines Remaining: {self.mines_left:02}",
             5,
             self.screen_height - 20,
-            white,
+            WHITE,
             12
         )
         arcade.draw_text(
             f"Time Elapsed: {self.elapsed_time:03.0f}",
             self.screen_width - 125,
             self.screen_height - 20,
-            white,
+            WHITE,
             12
         )
         arcade.draw_text(
             f"High Score: {self.high_score:03.0f}",
             self.screen_width - 125,
             self.screen_height - 40,
-            white,
+            WHITE,
             12
         )
 
@@ -179,7 +267,7 @@ class MyGame(arcade.View):
 
                 elif self.grid[row][column] == 1:
                     if self.prox_numbers[row][column] == 0:
-                        color = black
+                        color = BLACK
 
                         x = MARGIN + (WIDTH + MARGIN) * column + (WIDTH / 2)
                         y = MARGIN + (HEIGHT + MARGIN) * row + (HEIGHT / 2)
@@ -191,17 +279,17 @@ class MyGame(arcade.View):
                         y = MARGIN + (HEIGHT + MARGIN) * row + (HEIGHT / 2)
                         arcade.get_rectangle_points(x, y, WIDTH, HEIGHT)
 
-                        arcade.draw_text(str(number), x, y, white, WIDTH // 2, anchor_x="center", anchor_y="center")
+                        arcade.draw_text(str(number), x, y, WHITE, WIDTH // 2, anchor_x="center", anchor_y="center")
 
                 elif self.grid[row][column] == 2:
-                    color = green
+                    color = GREEN
 
                     x = MARGIN + (WIDTH + MARGIN) * column + (WIDTH / 2)
                     y = MARGIN + (HEIGHT + MARGIN) * row + (HEIGHT / 2)
 
                     arcade.draw_rectangle_filled(x, y, WIDTH, HEIGHT, color)
                 elif self.grid[row][column] == 0:
-                    color = white
+                    color = WHITE
 
                     x = MARGIN + (WIDTH + MARGIN) * column + (WIDTH / 2)
                     y = MARGIN + (HEIGHT + MARGIN) * row + (HEIGHT / 2)
@@ -216,13 +304,13 @@ class MyGame(arcade.View):
                 self.screen_height / 2,
                 self.screen_width * 3 / 4,
                 self.screen_height * 3 / 4,
-                white_translucent
+                WHITE_TRANSLUCENT
             )
             arcade.draw_text(
                 "YOU WIN!!!!",
                 self.screen_width / 2,
                 self.screen_height / 2,
-                blue,
+                BLUE,
                 100,
                 anchor_x="center",
                 anchor_y="center"
@@ -230,7 +318,7 @@ class MyGame(arcade.View):
 
         if self.game_over:
 
-            color = red
+            color = RED
             for row in range(self.row_count):
                 for column in range(self.column_count):
                     if self.mines[row][column] == 1:
@@ -244,13 +332,13 @@ class MyGame(arcade.View):
                 self.screen_height / 2,
                 self.screen_width * 3 / 4,
                 self.screen_height * 3 / 4,
-                white_translucent
+                WHITE_TRANSLUCENT
             )
             arcade.draw_text(
                 "GAME OVER",
                 self.screen_width / 2,
                 self.screen_height / 2 + 50,
-                blue,
+                BLUE,
                 100,
                 anchor_x="center",
                 anchor_y="center"
@@ -259,7 +347,7 @@ class MyGame(arcade.View):
                 "Would you like to try again?",
                 self.screen_width / 2,
                 self.screen_height / 2 - 50,
-                blue,
+                BLUE,
                 40,
                 anchor_x="center",
                 anchor_y="center"
@@ -321,7 +409,7 @@ class MyGame(arcade.View):
                     if self.first_click:
                         self.mines[row][column] = 0
                         self.mines[-1][0] = 1
-                        self.get_prox_number(row, column)
+                        self.prox_numbers[row][column] = self.get_prox_number(row, column)
                         self.first_click = False
 
                 if self.grid[row][column] == 2:
@@ -331,10 +419,11 @@ class MyGame(arcade.View):
                     self.grid[row][column] = 1
 
                 elif self.grid[row][column] == 1 and self.prox_numbers[row][column] > 0:
-                    self.get_adjacent_boxes(row, column)
+                    self.chord_cells(row, column)
 
                 self.first_click = False
 
+        # Handle flagging/unflagging with right-clicks
         elif button == arcade.MOUSE_BUTTON_RIGHT:
             if x < self.screen_width - MARGIN and y < self.screen_height - MARGIN - 50:
                 column = x // (WIDTH + MARGIN)
@@ -363,88 +452,6 @@ class MyGame(arcade.View):
             if len(self.buttons_pressed) > 0 and button == arcade.MOUSE_BUTTON_LEFT:
                 self.setup()
 
-    def get_prox_number(self, row, column):
-        """
-        Finds the number of mines bordering every cell.
-        Used to determine the number displayed on each cell.
-        """
-        prox_number = 0
-
-        if row < self.row_count - 1:
-            if self.mines[row + 1][column] == 1:
-                prox_number += 1
-        if row < self.row_count - 1 and column < self.column_count - 1:
-            if self.mines[row + 1][column + 1] == 1:
-                prox_number += 1
-        if column < self.column_count - 1:
-            if self.mines[row][column + 1] == 1:
-                prox_number += 1
-        if column < self.column_count - 1 and row > 0:
-            if self.mines[row - 1][column + 1] == 1:
-                prox_number += 1
-        if row > 0:
-            if self.mines[row - 1][column] == 1:
-                prox_number += 1
-        if row > 0 and column > 0:
-            if self.mines[row - 1][column - 1] == 1:
-                prox_number += 1
-        if column > 0:
-            if self.mines[row][column - 1] == 1:
-                prox_number += 1
-        if column > 0 and row < self.row_count - 1:
-            if self.mines[row + 1][column - 1] == 1:
-                prox_number += 1
-        if self.mines[row][column] == 1:
-            prox_number = 10
-        self.prox_numbers[row][column] = prox_number
-
-    def get_adjacent_boxes(self, row, column):
-        """
-        Used when trying to chord.
-        Finds the flags bordering the clicked cell, and if the flag count
-        equals the number in the cell, clears the remaining cells bordering the clicked cell.
-        """
-
-        current_flags = 0
-        for y in range(row - 1, row + 2):
-            if self.row_count > y >= 0:
-                for x in range(column - 1, column + 2):
-                    if self.column_count > x >= 0:
-                        if self.flag_list[y][x] == 1:
-                            current_flags += 1
-        if current_flags == self.prox_numbers[row][column]:
-            for y in range(row - 1, row + 2):
-                if self.row_count > y >= 0:
-                    for x in range(column - 1, column + 2):
-                        if self.column_count > x >= 0:
-                            if self.flag_list[y][x] != 1:
-                                self.grid[y][x] = 1
-
-    def get_zeroed_boxes(self):
-        """
-        Reveals cells that have no mines bordering them when
-        the player reveals a cell next to them.
-        """
-        for row in range(self.row_count):
-            for column in range(self.column_count):
-                if self.prox_numbers[row][column] == 0 and self.grid[row][column] == 1:
-                    if row > 0:
-                        self.grid[row - 1][column] = 1
-                    if row > 0 and column > 0:
-                        self.grid[row - 1][column - 1] = 1
-                    if column > 0:
-                        self.grid[row][column - 1] = 1
-                    if row < self.row_count - 1 and column > 0:
-                        self.grid[row + 1][column - 1] = 1
-                    if row < self.row_count - 1:
-                        self.grid[row + 1][column] = 1
-                    if row < self.row_count - 1 and column < self.column_count - 1:
-                        self.grid[row + 1][column + 1] = 1
-                    if column < self.column_count - 1:
-                        self.grid[row][column + 1] = 1
-                    if row > 0 and column < self.column_count - 1:
-                        self.grid[row - 1][column + 1] = 1
-
 
 
 class GameMenu(arcade.View):
@@ -453,7 +460,7 @@ class GameMenu(arcade.View):
     """
 
     def on_show(self):
-        arcade.set_background_color(black)
+        arcade.set_background_color(BLACK)
 
     def on_draw(self):
         arcade.start_render()
@@ -461,7 +468,7 @@ class GameMenu(arcade.View):
             "MINESWEEPER",
             MAIN_SCREEN_WIDTH / 2,
             MAIN_SCREEN_HEIGHT / 2 + 50,
-            white,
+            WHITE,
             70,
             anchor_x="center"
         )
@@ -469,7 +476,7 @@ class GameMenu(arcade.View):
             "Press 'a' for EASY\nPress 's' for MEDIUM\nPress 'd' for HARD",
             MAIN_SCREEN_WIDTH / 2,
             MAIN_SCREEN_HEIGHT/ 2 - 75,
-            white,
+            WHITE,
             40,
             anchor_x="center",
             anchor_y="top"
@@ -488,7 +495,7 @@ class GameMenu(arcade.View):
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(
+            game_view = Minesweeper(
                 EASY_COLUMN_COUNT,
                 EASY_ROW_COUNT,
                 self.screen_width,
@@ -505,7 +512,7 @@ class GameMenu(arcade.View):
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(
+            game_view = Minesweeper(
                 MEDIUM_COLUMN_COUNT,
                 MEDIUM_ROW_COUNT,
                 self.screen_width,
@@ -522,7 +529,7 @@ class GameMenu(arcade.View):
             self.window.width, self.window.height = self.screen_width, self.screen_height
             self.window.center_window()
 
-            game_view = MyGame(
+            game_view = Minesweeper(
                 HARD_COLUMN_COUNT,
                 HARD_ROW_COUNT,
                 self.screen_width,
